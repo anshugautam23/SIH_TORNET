@@ -1,9 +1,10 @@
+
 from flask import Flask, render_template, request, redirect, url_for, make_response, jsonify
 from flask_login import UserMixin, LoginManager, login_user, login_required, logout_user, current_user
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.cron import CronTrigger
 from datetime import datetime
-from datetime import  date
+from datetime import date
 from flask_sqlalchemy import SQLAlchemy
 from concurrent.futures import ThreadPoolExecutor
 import OpenSSL.crypto
@@ -72,11 +73,11 @@ def unauthorize():
 def default():
     if not current_user.is_authenticated:
         return redirect(url_for('login'))
-    
+
     if request.method == 'GET':
         if current_user:
             return redirect(url_for('dashboard'))
-        
+
         return redirect(url_for('login'))
 
 
@@ -109,7 +110,7 @@ def get_scheduled_tasks():
 
     if not scheduler:
         return None
-    else:    
+    else:
         for job in scheduler.get_jobs():
             trigger = job.trigger
             if isinstance(trigger, CronTrigger):
@@ -136,7 +137,7 @@ def get_scheduled_tasks():
 def dashboard():
     if request.method == 'POST':
         return redirect(url_for('login'))
-    
+
     tasks = get_scheduled_tasks()
     api_key = current_user.api_key
     secret_access_key = current_user.secret_access_key
@@ -156,7 +157,7 @@ def users():
         return render_template('users.html', users=users)
     else:
         return redirect(url_for('unauthorize'))
-    
+
 
 # Adding a user via admin
 @app.route('/add_user', methods=['GET', 'POST'])
@@ -169,11 +170,11 @@ def add_user():
         if not username or not password:
             message = 'Please enter all fields'
             return render_template('add_user.html',error = message)
-        
+
         if User.query.filter_by(username=username).first():
             message = "User with that username already exists."
             return render_template("add_user.html",error=message)
-        
+
         api_key = 'TORNET'+''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(20))
         secret_access_key = ''.join(random.choice(string.ascii_lowercase + string.digits) for _ in range(40))
         hashed_password = hashlib.sha256(password.encode('utf-8')).hexdigest()
@@ -184,10 +185,10 @@ def add_user():
         # Show success message
         message = 'User added successfully!'
         return render_template('add_user.html',success = message)
-    
-    #else:    
+
+    #else:
     #    return redirect(url_for('unauthorize'))
-    
+
     if request.method == 'GET' and current_user.username != 'admin':
         return redirect(url_for('unauthorize'))
 
@@ -233,7 +234,7 @@ def delete_user(user_id):
         return redirect(url_for('users'))
     else:
         return render_template('users.html', error="User not found.")
-    
+
 ################################################################## EXPORTING URLS ################################################################
 
 def export_links(file_path, export_format):
@@ -348,7 +349,7 @@ def get_fetch_urls(url, urls_queue):
     except Exception as e:
         print(f"Error fetching URL: {url}")
         # IF YOU WANT TO SEE THE ERROR, OTHERWISE DON'T UNCOMMENT IT.
-#        print(e)
+        print(e)
 
 ####################################################################### FINDING LINKS ########################################################
 
@@ -372,14 +373,14 @@ def discover():
         return export_links('internal/discover/export_links.txt', export_format)
 
 
-# Implemented the search engines based , but it is not a good idea to thow out such thing on the frontend, 
-# hence decided to remove the search engine based searching.    
+# Implemented the search engines based , but it is not a good idea to thow out such thing on the frontend,
+# hence decided to remove the search engine based searching.
 
 #    search_engine = request.form.get('search_engine') --> DEAR, FRONTEND DEV DO NOT UNCOMMENT THIS LINE
     keywords = request.form.get('keywords')
     api_key = request.form.get('api_key')
     secret_access_key = request.form.get('secret_access_key')
-    
+
     if request.method == 'POST' and (keywords!=None or (User.query.filter_by(api_key=api_key).first() and User.query.filter_by(secret_access_key=secret_access_key))):
 #        keywords = request.form.get('keywords')
 #    if request.method == 'POST' and keywords!=None:
@@ -417,13 +418,13 @@ def discover():
                         f"http://krakenai2gmgwwqyo7bcklv2lzcvhe7cxzzva2xpygyax5f33oqnxpad.onion/search/?q={keyword.strip()}&PAGEN_1={count}&SIZEN_1=10"
                         f"http://5qqrlc7hw3tsgokkqifb33p3mrlpnleka2bjg7n46vih2synghb6ycid.onion/index.php?a=search&q={keyword.strip()}&page={count}&f=1"
                         ]
-                    
+
                     for url in urls_to_fetch:
                         thread = threading.Thread(target=get_fetch_urls, args=(url, urls_queue))
                         threads.append(thread)
                         thread.start()
 
-                    
+
             elif level == '4':
                 # Ahmia
                 get_fetch_urls(f"http://juhanurmihxlp77nkq76byazcldy2hlmovfu2epvl5ankdibsot4csyd.onion/search?q={keyword.strip()}",urls_queue)
@@ -432,7 +433,7 @@ def discover():
                 # Deep Search
                 get_fetch_urls(f"http://search7tdrcvri22rieiwgi5g46qnwsesvnubqav2xakhezv4hjzkkad.onion/result.php?search={keyword.strip()}",urls_queue)
 
- 
+
                 ## There is some issue happening when going more than 20, may be the large amount of concurrent requests.
                 ## If you can find the solution of it, then feel free to collaborate @prakhar0x01 --> github
                 for count in range(1,20):
@@ -463,7 +464,7 @@ def discover():
                         f"http://krakenai2gmgwwqyo7bcklv2lzcvhe7cxzzva2xpygyax5f33oqnxpad.onion/search/?q={keyword.strip()}&PAGEN_1={count}&SIZEN_1=10"
                         f"http://5qqrlc7hw3tsgokkqifb33p3mrlpnleka2bjg7n46vih2synghb6ycid.onion/index.php?a=search&q={keyword.strip()}&page={count}&f=1"
                         ]
-                    
+
                     for url in urls_to_fetch:
                         thread = threading.Thread(target=get_fetch_urls, args=(url, urls_queue))
                         threads.append(thread)
@@ -475,31 +476,31 @@ def discover():
                 get_fetch_urls(f"http://juhanurmihxlp77nkq76byazcldy2hlmovfu2epvl5ankdibsot4csyd.onion/search?q={keyword.strip()}",urls_queue)
                 # Deep Search
                 get_fetch_urls(f"http://search7tdrcvri22rieiwgi5g46qnwsesvnubqav2xakhezv4hjzkkad.onion/result.php?search={keyword.strip()}",urls_queue)
-      
+
                 for count in range(1,11):
 #-----              ## I KNOW THIS IS NOT THE BEST EFFECTIVE APPROACH TO THIS TASKS, THE TIME CONSUMED CAN BE MINIMIZED,
                     ## BUT FOR 4-5 DAYS, THIS SEEMS TO BE EFFECTIVE APPROACH.
                     urls_to_fetch = [f"http://findtorroveq5wdnipkaojfpqulxnkhblymc7aramjzajcvpptd4rjqd.onion/search?q={keyword.strip()}&page={count}",
                                      f"http://5qqrlc7hw3tsgokkqifb33p3mrlpnleka2bjg7n46vih2synghb6ycid.onion/index.php?a=search&q={keyword.strip()}&page={count}&f=1"
                                      ]
-                    
+
                     for url in urls_to_fetch:
 #                        print(urls_queue)
                         thread = threading.Thread(target=get_fetch_urls, args=(url, urls_queue))
                         threads.append(thread)
                         thread.start()
-                            
+
 
             elif level == '1':
                # Ahmia
                 get_fetch_urls(f"http://juhanurmihxlp77nkq76byazcldy2hlmovfu2epvl5ankdibsot4csyd.onion/search?q={keyword.strip()}",urls_queue)
                 # Deep Search
                 get_fetch_urls(f"http://search7tdrcvri22rieiwgi5g46qnwsesvnubqav2xakhezv4hjzkkad.onion/result.php?search={keyword.strip()}",urls_queue)
-                
+
             else:
                 message = "Invalid Input..!!"
-                return render_template('discover.html', error=message)    
-            
+                return render_template('discover.html', error=message)
+
 #----
     # When all threads were done their tasks
     for thread in threads:
@@ -509,8 +510,8 @@ def discover():
     # Collect the all the onion links and filter the unique from them.
     urls = list()
 #   urls = set()       #We can also use set
-# 
-    with open("internal/discover/export_links.txt", "w") as f:     
+#
+    with open("internal/discover/export_links.txt", "w") as f:
         while not urls_queue.empty():
             link = urls_queue.get()
             if link not in urls:    # To avoid Duplicates
@@ -579,7 +580,7 @@ def schedule_task():
         )
 
         return render_template('schedule.html', success=f'Task scheduled successfully for: {scheduled_time}')
-    
+
     except Exception as e:
         return render_template('schedule.html',error = f'An Error Occured : {e}')
 
@@ -594,7 +595,7 @@ def get_task_data(task_route, form_data):
 
         except Exception as e:
             raise ValueError(f'Invalid data for field "{field}": {e}')
-        
+
     return task_data
 
 def schedule_task_wrapper(task_route, task_data, email, api_key, secret_access_key):
@@ -637,21 +638,21 @@ def send_email_notification(email, task_route, task_result):
     # Initialize variables to store sender email and password
             sender_email = None
             password = None
-    
+
     # Iterate through each line in the file
             for line in file:
         # Split the line by colon
                 parts = line.strip().split(':')
-        
+
         # Check if the line contains sender email
                 if len(parts) == 2 and parts[0].strip() == 'sender_email':
                     sender_email = parts[1].strip()
-        
+
         # Check if the line contains password
                 elif len(parts) == 2 and parts[0].strip() == 'password':
                     password = parts[1].strip()
-        file.close()           
-                    
+        file.close()
+
         server.login(sender_email, password)
 
         # Prepare email message
@@ -795,7 +796,7 @@ def check_url_status(url):
         #print(response)
         if response.status_code == 200 or response.status_code == 302 or response.status_code == 301 or response.status_code == 401 or response.status_code == 403 :
         # Extract .onion links from the content
-            
+
             onion_links = extract_onion_links(content)
             return f"Active (Status Code: {response.status_code})"
         else:
@@ -844,7 +845,7 @@ def render():
 """
 @app.route("/enumerate/render/view",methods=['GET'])
 def view():
-    return render_template('view.html')    
+    return render_template('view.html')
 """
 ############################################################################################################################
 
@@ -905,14 +906,14 @@ def worker(url, word):
                 results.append(f"FUZZED: {fuzzed_url}")
 
             matches = process_response(fuzzed_url, response.text)
-            with open("internal/details/export_links.txt", "w") as f: 
+            with open("internal/details/export_links.txt", "w") as f:
                 for pattern_name, pattern_matches in matches.items():
                     for match in pattern_matches:
                         result_entry = f"({pattern_name})| {match} | {fuzzed_url}"
-                        results.append(result_entry)    
+                        results.append(result_entry)
                         f.write(f"{match}  ->  {fuzzed_url}\n")
-            f.close()            
-                
+            f.close()
+
 
 
             # Scraping JavaScript files and applying regex
@@ -925,13 +926,13 @@ def worker(url, word):
                         for pattern_name, pattern_matches in js_matches.items():
                             for match in pattern_matches:
                                 js_result_entry = f"JavaScript ({pattern_name})| {match} | {js_url}"
-                                results.append(js_result_entry)  
-                                with open("internal/details/export_links.txt", "a") as f:   
-                                    f.write(f"{match}  ->   {js_url}\n") 
-                                f.close()        
+                                results.append(js_result_entry)
+                                with open("internal/details/export_links.txt", "a") as f:
+                                    f.write(f"{match}  ->   {js_url}\n")
+                                f.close()
 
                 except requests.exceptions.RequestException as e:
-                    print(f"Error fetching JavaScript content from {js_url}: {e}")               
+                    print(f"Error fetching JavaScript content from {js_url}: {e}")
 
 @app.route('/enumerate/details', methods=['POST', 'GET'])
 @login_required
@@ -1024,10 +1025,10 @@ def onion_certificate():
             expiration_date = cert.get_notAfter().decode("utf-8")
 
             return render_template('onion_certificate.html', issuer=issuer, subject=subject, expiration_date=expiration_date)
-        
+
         except requests.exceptions.RequestException as e:
             return f"Error fetching certificate information: {e}"
-    
+
 """
 ######################################################3###############  LOGOUT   #############################################################
 

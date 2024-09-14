@@ -16,3 +16,6 @@ requests
 random
 re
 urllib
+flask_sqlalchemy
+pysocks
+lxml
